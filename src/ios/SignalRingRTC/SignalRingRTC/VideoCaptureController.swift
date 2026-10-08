@@ -49,6 +49,10 @@ public class VideoCaptureController {
             return self?._isUsingFrontCamera
         }
     }
+    #if DEBUG && targetEnvironment(simulator)
+        // Keychat harness only; generated input is supplied by app-owned test support.
+        var keychatGeneratedTestCapture = false
+    #endif
     private var isCapturing: Bool = false
 
     public var captureSession: AVCaptureSession {
@@ -125,6 +129,10 @@ public class VideoCaptureController {
     private func startCaptureSync() {
         Logger.info("startCaptureSync():")
         assertIsOnSerialQueue()
+
+        #if DEBUG && targetEnvironment(simulator)
+            if keychatGeneratedTestCapture { return }
+        #endif
 
         #if USE_FILE_BASED_CAMERA
             fileCapturer.startCapturing(

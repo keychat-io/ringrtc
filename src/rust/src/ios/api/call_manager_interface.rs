@@ -1764,6 +1764,12 @@ pub extern "C" fn ringrtcIsCallMessageValidOpaqueRing(
 
 #[unsafe(no_mangle)]
 #[allow(non_snake_case)]
+pub extern "C" fn ringrtcLogBookmarkMessage() {
+    call_manager::log_bookmark_message();
+}
+
+#[unsafe(no_mangle)]
+#[allow(non_snake_case)]
 pub extern "C" fn ringrtcCallIdFromEraId(era_bytes: AppByteSlice) -> u64 {
     let Some(era) = era_bytes
         .as_slice()

@@ -1035,6 +1035,13 @@ where
         }
     }
 
+    /// Log a special "bookmark" message. Intended for debugging use; clients
+    /// may present a button to users to flag a particular time when they are
+    /// seeing a problem.
+    pub fn log_bookmark_message() {
+        warn!("ringrtc_log_bookmark!");
+    }
+
     /// Checks if the CallManager is busy with either a 1:1 or group call.
     #[cfg(feature = "sim")]
     pub fn busy(&self) -> bool {

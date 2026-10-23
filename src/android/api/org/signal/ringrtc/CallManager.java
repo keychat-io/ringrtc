@@ -1316,6 +1316,15 @@ public class CallManager {
 
   /**
    *
+   * Log a unique "marker" message. Can be used to expose a button to users to indicate
+   * when in the call they are experiencing a problem.
+   */
+  public void logBookmarkMessage() {
+    ringrtcLogBookmarkMessage();
+  }
+
+  /**
+   *
    * Creates and returns a GroupCall object. Defaults call to:
    * - videoEnabled == false
    * - audioEnabled == false
@@ -2800,4 +2809,6 @@ public class CallManager {
                                  byte[] authCredentialPresentation,
                                  byte[] rootKeyBytes)
     throws CallException;
+
+  private native void ringrtcLogBookmarkMessage();
 }

@@ -817,7 +817,7 @@ pub unsafe extern "C" fn Java_org_signal_ringrtc_CallManager_ringrtcPeekCallLink
 
 #[unsafe(no_mangle)]
 #[allow(non_snake_case)]
-pub unsafe extern "C" fn Java_org_signal_ringrtc_CallManager_logBookmarkMessage(
+pub unsafe extern "C" fn Java_org_signal_ringrtc_CallManager_ringrtcLogBookmarkMessage(
     _unowned_env: EnvUnowned,
     _object: JObject,
 ) {

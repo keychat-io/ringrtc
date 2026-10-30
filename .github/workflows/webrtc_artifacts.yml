@@ -65,6 +65,7 @@ jobs:
 
     outputs:
       checksum: ${{ steps.checksum.outputs.checksum }}
+      checksum_xcframework: ${{ steps.checksum.outputs.checksum_xcframework }}
 
     steps:
       - uses: actions/checkout@v6
@@ -84,8 +85,9 @@ jobs:
       - name: Output Artifact Checksum
         id: checksum
         run: |
-          sha256sum out/webrtc-*.tar.bz2 | tee -a $GITHUB_STEP_SUMMARY
+          sha256sum out/webrtc-*.tar.bz2 out/webrtc-*.xcframework.zip | tee -a $GITHUB_STEP_SUMMARY
           echo "checksum=$(sha256sum out/webrtc-*.tar.bz2 | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "checksum_xcframework=$(sha256sum out/webrtc-*.xcframework.zip | awk '{print $1}')" >> $GITHUB_OUTPUT
 
       - uses: google-github-actions/auth@v3
         with:
@@ -98,6 +100,15 @@ jobs:
           path: 'out'
           destination: build-artifacts.signal.org/libraries
           glob: 'webrtc-*.tar.bz2'
+          parent: false
+          process_gcloudignore: false
+
+      - uses: google-github-actions/upload-cloud-storage@v3
+        if: ${{ !inputs.dry_run }}
+        with:
+          path: 'out'
+          destination: build-artifacts.signal.org/libraries
+          glob: 'webrtc-*.xcframework.zip'
           parent: false
           process_gcloudignore: false
 
@@ -289,6 +300,7 @@ jobs:
           {
             "android": "${{ needs.build_android.outputs.checksum }}",
             "ios": "${{ needs.build_ios.outputs.checksum }}",
+            "ios-xcframework": "${{ needs.build_ios.outputs.checksum_xcframework }}",
             "linux-x64": "${{ needs.build_linux.outputs.checksum_x64 }}",
             "linux-arm64": "${{ needs.build_linux.outputs.checksum_arm64 }}",
             "mac-x64": "${{ needs.build_mac.outputs.checksum_x64 }}",

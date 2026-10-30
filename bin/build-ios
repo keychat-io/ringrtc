@@ -10,13 +10,14 @@
 # $ xcode-select --install
 # $ rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
 # $ rustup component add rust-src
-# $ cargo install cbindgen
+# $ cargo install --locked --version $(cat config/cbindgen-version) cbindgen
 #
 # The goal of this script is to do the following:
 # 1) Build WebRTC using existing (but modified) scripts for iOS,
 #    resulting in WebRTC.xcframework.
 # 2) Build the RingRTC Rust library and associated header file.
-#    This is libringrtc.a (one per target) and ringrtc.h.
+#    This is libringrtc.a (one per target), LibRingRTCFfi.xcframework,
+#    and ringrtc.h.
 #
 # The Signal-iOS client project should include both the libringrtc
 # and WebRTC.xcframework directories, copied from out/ to the
@@ -168,10 +169,13 @@ then
   end' >"${OUTPUT_DIR}"/WebRTCForTesting.podspec
 
   "${BIN_DIR}"/convert_webrtc_acknowledgments.py -f plist "${OUTPUT_DIR}"/${BUILD_TYPE}/WebRTC.xcframework/LICENSE.md > "${OUTPUT_DIR}"/${BUILD_TYPE}/acknowledgments-webrtc-ios.plist
+  cp "${OUTPUT_DIR}"/${BUILD_TYPE}/acknowledgments-webrtc-ios.plist "${OUTPUT_DIR}"/${BUILD_TYPE}/WebRTC.xcframework/
 
   if [[ -n "${ARCHIVE_WEBRTC}" ]]
   then
     tar -c --auto-compress --no-mac-metadata -f "${OUTPUT_DIR}/webrtc-${WEBRTC_VERSION}-ios-${BUILD_TYPE}.tar.bz2" -C "${OUTPUT_DIR}" WebRTCForTesting.podspec "${BUILD_TYPE}/WebRTC.xcframework" "${BUILD_TYPE}/acknowledgments-webrtc-ios.plist"
+    rm -f "${OUTPUT_DIR}/webrtc-${WEBRTC_VERSION}-ios-${BUILD_TYPE}.xcframework.zip"
+    ditto -c -k --norsrc --noextattr --noacl --noqtn --keepParent "${OUTPUT_DIR}"/${BUILD_TYPE}/WebRTC.xcframework "${OUTPUT_DIR}/webrtc-${WEBRTC_VERSION}-ios-${BUILD_TYPE}.xcframework.zip"
   fi
 fi
 
@@ -211,6 +215,27 @@ then
     )
   done
 
+  echo "Creating LibRingRTCFfi.xcframework in ${OUTPUT_DIR}/${BUILD_TYPE}..."
+  XCFRAMEWORK="${OUTPUT_DIR}/${BUILD_TYPE}/LibRingRTCFfi.xcframework"
+  SIMULATOR_LIBRARY_DIR="${OUTPUT_DIR}/build/xcframework-${BUILD_TYPE}/simulator"
+  LIBRARY_ARGS=()
+  SIMULATOR_LIBRARIES=()
+  for TARGET in ${TARGETS}; do
+    case ${TARGET} in
+      aarch64-apple-ios )
+        LIBRARY_ARGS+=(-library "${OUTPUT_DIR}/${BUILD_TYPE}/libringrtc/${TARGET}/libringrtc.a")
+        ;;
+      * )
+        SIMULATOR_LIBRARIES+=("${OUTPUT_DIR}/${BUILD_TYPE}/libringrtc/${TARGET}/libringrtc.a")
+        ;;
+    esac
+  done
+  rm -rf "${SIMULATOR_LIBRARY_DIR}" "${XCFRAMEWORK}"
+  mkdir -p "${SIMULATOR_LIBRARY_DIR}"
+  lipo -create "${SIMULATOR_LIBRARIES[@]}" -output "${SIMULATOR_LIBRARY_DIR}/libringrtc.a"
+  LIBRARY_ARGS+=(-library "${SIMULATOR_LIBRARY_DIR}/libringrtc.a")
+  xcodebuild -create-xcframework "${LIBRARY_ARGS[@]}" -output "${XCFRAMEWORK}"
+
   # Create the modulemap:
   echo 'framework module SignalRingRTC {
       umbrella header "SignalRingRTC.h"
@@ -223,8 +248,10 @@ then
       }
   }' >"${OUTPUT_DIR}"/${BUILD_TYPE}/libringrtc/RingRTC.modulemap
 
-  echo "Creating header file in ${OUTPUT_DIR}/${BUILD_TYPE}/libringrtc..."
-  cbindgen "${RINGRTC_SRC_DIR}"/rust/src/lib.rs --config "${RINGRTC_SRC_DIR}"/rust/cbindgen.toml -o "${OUTPUT_DIR}"/${BUILD_TYPE}/libringrtc/ringrtc.h
+  "${BIN_DIR}"/generate-ffi-header
+
+  echo "Copying header file to ${OUTPUT_DIR}/${BUILD_TYPE}/libringrtc..."
+  cp "${RINGRTC_SRC_DIR}"/ios/SignalRingRTC/RingRTCFfi/ringrtc.h "${OUTPUT_DIR}"/${BUILD_TYPE}/libringrtc/
 
   # Create a relative symlink at top level, specifying "debug" or "release"
   # so that the testing project doesn't have to change.
@@ -240,6 +267,8 @@ then
       echo 'warning: ignoring --archive-ringrtc for --host-sim-only build'
     else
       tar -c --auto-compress --no-mac-metadata -f "${OUTPUT_DIR}/ringrtc-ios-build-v${RINGRTC_VERSION}.tar.bz2" -C "${OUTPUT_DIR}" ${BUILD_TYPE}/libringrtc
+      rm -f "${OUTPUT_DIR}/ringrtc-ios-build-v${RINGRTC_VERSION}.xcframework.zip"
+      ditto -c -k --norsrc --noextattr --noacl --noqtn --keepParent "${XCFRAMEWORK}" "${OUTPUT_DIR}/ringrtc-ios-build-v${RINGRTC_VERSION}.xcframework.zip"
     fi
   fi
 fi

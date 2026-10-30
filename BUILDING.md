@@ -66,9 +66,9 @@ Install Rust target support for iOS, including compiling the stdlib from source,
     rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
     rustup component add rust-src
 
-Install cbindgen via `cargo`:
+Install cbindgen via `cargo`, at the version in `config/cbindgen-version`:
 
-    cargo install cbindgen
+    cargo install --locked --version $(cat config/cbindgen-version) cbindgen
 
 ### Electron
 

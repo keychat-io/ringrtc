@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.74.0
+
+- Migrate to Swift Package Manager
+
+- Add function to log a "bookmark" message
+
+- Call Sim: Fix PipeWire capture stalls in the client image
+
+- Update WebRTC to 8037b
+  - Fix decode failures with DRED
+
 ## v2.73.0
 
 - Update to webrtc 8037a (m154)

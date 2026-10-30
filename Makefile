@@ -64,7 +64,6 @@ gctc: prepare_workspace
 call_sim-cli: prepare_workspace
 else ifeq ($(USE_PREBUILD), 1)
 android: fetch_artifact
-ios: fetch_artifact
 electron: fetch_artifact
 direct: fetch_artifact
 gctc: fetch_artifact

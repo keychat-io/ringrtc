@@ -1863,6 +1863,10 @@ extern BorrowedRc_RffiPeerConnection Rust_borrowPeerConnectionFromJniOwnedPeerCo
 #endif
 
 #if defined(TARGET_OS_IOS)
+void ringrtcVersion_2_73_0(void);
+#endif
+
+#if defined(TARGET_OS_IOS)
 void *ringrtcCreateCallManager(struct AppInterface appInterface, const Client *httpClient);
 #endif
 

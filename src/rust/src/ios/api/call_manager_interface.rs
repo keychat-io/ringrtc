@@ -623,6 +623,11 @@ pub fn string_from_app_slice(app_slice: &AppByteSlice) -> Option<String> {
     Some(std::str::from_utf8(app_slice.as_slice()?).ok()?.to_string())
 }
 
+// Referenced by SignalRingRTC so a Swift/Rust version mismatch causes linking to fail.
+#[unsafe(no_mangle)]
+#[allow(non_snake_case)]
+pub extern "C" fn ringrtcVersion_2_73_0() {}
+
 #[unsafe(no_mangle)]
 #[allow(non_snake_case)]
 pub unsafe extern "C" fn ringrtcCreateCallManager(

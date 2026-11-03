@@ -19,7 +19,7 @@ public class CallContext {
 
     let audioSource: RTCAudioSource
     let audioTrack: RTCAudioTrack
-    weak var videoCaptureController: VideoCaptureController!
+    let videoCaptureController: VideoCaptureController
     let videoSource: RTCVideoSource
     let videoTrack: RTCVideoTrack
 

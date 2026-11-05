@@ -11,6 +11,35 @@ import WebRTC
 @available(iOSApplicationExtension, unavailable)
 public class CallContext {
 
+    // Keychat direct calls use device 1. Do not retain the native connection or
+    // accidentally observe the outgoing parent/fork connection (device 0).
+    private let keychatStatisticsLock = NSLock()
+    private weak var keychatStatisticsConnection: Connection?
+
+    func keychatRegisterStatisticsConnection(_ connection: Connection, deviceId: UInt32) {
+        #if DEBUG
+        NSLog("[KeychatRTC] stage=media-path-connection deviceOne=%d parent=%d", deviceId == 1 ? 1 : 0, deviceId == 0 ? 1 : 0)
+        #endif
+        guard deviceId == 1 else { return }
+        keychatStatisticsLock.lock()
+        keychatStatisticsConnection = connection
+        keychatStatisticsLock.unlock()
+    }
+
+    func keychatStatistics(completion: @escaping (RTCStatisticsReport?) -> Void) {
+        keychatStatisticsLock.lock()
+        let connection = keychatStatisticsConnection
+        keychatStatisticsLock.unlock()
+        guard let connection else {
+            #if DEBUG
+            NSLog("[KeychatRTC] stage=media-path-unavailable reason=no-device-one-connection")
+            #endif
+            completion(nil)
+            return
+        }
+        connection.keychatStatistics { completion($0) }
+    }
+
     // A camera queue on which to perform camera operations.
     private static let cameraQueue = DispatchQueue(label: "CallContextCameraQueue")
 

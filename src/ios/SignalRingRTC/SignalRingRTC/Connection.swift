@@ -36,6 +36,11 @@ public class Connection {
         return self.nativePeerConnection
     }
 
+    // Read-only public WebRTC statistics; this does not change connection policy.
+    func keychatStatistics(completion: @escaping (RTCStatisticsReport) -> Void) {
+        peerConnection.statistics(completionHandler: completion)
+    }
+
     func getWrapper(pc: UnsafeMutableRawPointer?) -> AppConnectionInterface {
         return AppConnectionInterface(
             object: UnsafeMutableRawPointer(Unmanaged.passRetained(self).toOpaque()),

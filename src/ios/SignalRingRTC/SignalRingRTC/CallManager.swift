@@ -767,6 +767,20 @@ public class CallManager<CallType, CallManagerDelegateType>: CallManagerInterfac
     }
 
     @MainActor
+    public func keychatDirectCallStatistics(completion: @escaping (RTCStatisticsReport?) -> Void) {
+        guard !isClosed,
+              let context = ringrtcGetActiveCallContext(ringRtcCallManager) else {
+            #if DEBUG
+            NSLog("[KeychatRTC] stage=media-path-unavailable reason=no-active-context")
+            #endif
+            completion(nil)
+            return
+        }
+        let appCallContext: CallContext = Unmanaged.fromOpaque(context).takeUnretainedValue()
+        appCallContext.keychatStatistics(completion: completion)
+    }
+
+    @MainActor
     public func setLocalAudioEnabled(enabled: Bool) {
         Logger.info("#outgoing_audio_enabled: \(enabled)")
 
@@ -1254,6 +1268,8 @@ public class CallManager<CallType, CallManagerDelegateType>: CallManagerInterfac
                                             factory: self.factory!,
                                       configuration: configuration,
                                         constraints: constraints)
+
+        appCallContext.keychatRegisterStatisticsConnection(connection, deviceId: deviceId)
 
         let pc = connection.getRawPeerConnection()
         // If pc is nil CallManager will handle it internally.

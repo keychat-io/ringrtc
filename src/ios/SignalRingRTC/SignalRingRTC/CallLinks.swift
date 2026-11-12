@@ -13,8 +13,10 @@ public struct CallLinkRootKey: CustomStringConvertible {
 
     public init(_ string: String) throws {
         var result: Self? = nil
-        rtc_calllinks_CallLinkRootKey_parse(string, &result) { resultOpaquePtr, parsedBytes in
-            resultOpaquePtr!.assumingMemoryBound(to: Optional<Self>.self).pointee = Self(validatedBytes: parsedBytes)
+        _ = withUnsafeMutablePointer(to: &result) { resultPointer in
+            rtc_calllinks_CallLinkRootKey_parse(string, resultPointer) { resultOpaquePtr, parsedBytes in
+                resultOpaquePtr!.assumingMemoryBound(to: Optional<Self>.self).pointee = Self(validatedBytes: parsedBytes)
+            }
         }
         guard let result else {
             throw ValidationError()
@@ -37,16 +39,20 @@ public struct CallLinkRootKey: CustomStringConvertible {
 
     public static func generate() -> Self {
         var result: Self? = nil
-        rtc_calllinks_CallLinkRootKey_generate(&result) { resultOpaquePtr, generatedBytes in
-            resultOpaquePtr!.assumingMemoryBound(to: Optional<Self>.self).pointee = Self(validatedBytes: generatedBytes)
+        withUnsafeMutablePointer(to: &result) { resultPointer in
+            rtc_calllinks_CallLinkRootKey_generate(resultPointer) { resultOpaquePtr, generatedBytes in
+                resultOpaquePtr!.assumingMemoryBound(to: Optional<Self>.self).pointee = Self(validatedBytes: generatedBytes)
+            }
         }
         return result!
     }
 
     public static func generateAdminPasskey() -> Data {
         var result: Data? = nil
-        rtc_calllinks_CallLinkRootKey_generateAdminPasskey(&result) { resultOpaquePtr, generatedPasskey in
-            resultOpaquePtr!.assumingMemoryBound(to: Optional<Data>.self).pointee = generatedPasskey.toData()
+        withUnsafeMutablePointer(to: &result) { resultPointer in
+            rtc_calllinks_CallLinkRootKey_generateAdminPasskey(resultPointer) { resultOpaquePtr, generatedPasskey in
+                resultOpaquePtr!.assumingMemoryBound(to: Optional<Data>.self).pointee = generatedPasskey.toData()
+            }
         }
         return result!
     }
@@ -54,8 +60,10 @@ public struct CallLinkRootKey: CustomStringConvertible {
     public func deriveRoomId() -> Data {
         var result: Data? = nil
         let errorCStr = bytes.withRtcBytes { bytes in
-            rtc_calllinks_CallLinkRootKey_deriveRoomId(bytes, &result) { resultOpaquePtr, roomIdBytes in
-                resultOpaquePtr!.assumingMemoryBound(to: Optional<Data>.self).pointee = roomIdBytes.toData()
+            withUnsafeMutablePointer(to: &result) { resultPointer in
+                rtc_calllinks_CallLinkRootKey_deriveRoomId(bytes, resultPointer) { resultOpaquePtr, roomIdBytes in
+                    resultOpaquePtr!.assumingMemoryBound(to: Optional<Data>.self).pointee = roomIdBytes.toData()
+                }
             }
         }
         if let errorCStr {
@@ -67,8 +75,10 @@ public struct CallLinkRootKey: CustomStringConvertible {
     public var unredactedString: String {
         var result: String? = nil
         let errorCStr = bytes.withRtcBytes { bytes in
-            rtc_calllinks_CallLinkRootKey_toFormattedString(bytes, &result) { resultOpaquePtr, rtcString in
-                resultOpaquePtr!.assumingMemoryBound(to: Optional<String>.self).pointee = rtcString.toString()
+            withUnsafeMutablePointer(to: &result) { resultPointer in
+                rtc_calllinks_CallLinkRootKey_toFormattedString(bytes, resultPointer) { resultOpaquePtr, rtcString in
+                    resultOpaquePtr!.assumingMemoryBound(to: Optional<String>.self).pointee = rtcString.toString()
+                }
             }
         }
         if let errorCStr {
@@ -80,8 +90,10 @@ public struct CallLinkRootKey: CustomStringConvertible {
     public var description: String {
         var result: String? = nil
         let errorCStr = bytes.withRtcBytes { bytes in
-            rtc_calllinks_CallLinkRootKey_toRedactedString(bytes, &result) { resultOpaquePtr, rtcString in
-                resultOpaquePtr!.assumingMemoryBound(to: Optional<String>.self).pointee = rtcString.toString()
+            withUnsafeMutablePointer(to: &result) { resultPointer in
+                rtc_calllinks_CallLinkRootKey_toRedactedString(bytes, resultPointer) { resultOpaquePtr, rtcString in
+                    resultOpaquePtr!.assumingMemoryBound(to: Optional<String>.self).pointee = rtcString.toString()
+                }
             }
         }
         if let errorCStr {

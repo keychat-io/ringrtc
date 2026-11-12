@@ -7,6 +7,11 @@ import Foundation
 import RingRTCFfi
 import WebRTC
 
+// Only the close worker receives this retired pointer after the manager clears it.
+private struct ClosingCallManager: @unchecked Sendable {
+    let pointer: UnsafeMutableRawPointer?
+}
+
 // Errors that the Call Manager APIs can throw.
 @available(iOSApplicationExtension, unavailable)
 public enum CallManagerError: Error {
@@ -528,9 +533,10 @@ public class CallManager<CallType, CallManagerDelegateType>: CallManagerInterfac
     deinit {
         // Explicit close owns the normal worker join. Keep the fallback off the
         // main thread, which may still be needed by a queued platform callback.
-        if let nativeManager = ringRtcCallManager {
+        if ringRtcCallManager != nil {
+            let closing = ClosingCallManager(pointer: ringRtcCallManager)
             DispatchQueue.global(qos: .userInitiated).async {
-                if ringrtcClose(nativeManager) == nil {
+                if closing.pointer.map({ ringrtcClose($0) != nil }) != true {
                     Logger.warn("Call Manager couldn't be properly closed")
                 }
             }
@@ -545,13 +551,13 @@ public class CallManager<CallType, CallManagerDelegateType>: CallManagerInterfac
     public func beginClose() -> Task<Void, Error> {
         if let closeTask { return closeTask }
         isClosed = true
-        let nativeManager = ringRtcCallManager
+        let closing = ClosingCallManager(pointer: ringRtcCallManager)
         ringRtcCallManager = nil
         let drain = callbackDrain
         let task = Task { @MainActor in
             let succeeded = await withCheckedContinuation { continuation in
                 DispatchQueue.global(qos: .userInitiated).async {
-                    continuation.resume(returning: nativeManager.map { ringrtcClose($0) != nil } ?? true)
+                    continuation.resume(returning: closing.pointer.map { ringrtcClose($0) != nil } ?? true)
                 }
             }
             // Native workers can enqueue their final Concluded during close.

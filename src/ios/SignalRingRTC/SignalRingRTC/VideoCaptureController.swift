@@ -269,9 +269,11 @@ public class VideoCaptureController {
             }
         }
 
-        if _isDebugAssertConfiguration(), let selectedFormat = selectedFormat {
+        #if DEBUG
+        if let selectedFormat = selectedFormat {
             Logger.info("  selected: \(selectedFormat)")
         }
+        #endif
 
         assert(selectedFormat != nil)
 

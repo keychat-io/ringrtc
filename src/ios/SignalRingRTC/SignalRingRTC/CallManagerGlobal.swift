@@ -94,6 +94,8 @@ public class CallManagerGlobal {
             "WebRTC-Bwe-ProbingConfiguration": "skip_if_est_larger_than_fraction_of_max:0.99,probe_max_allocation_without_alr:false",
             "WebRTC-IncreaseIceCandidatePriorityHostSrflx": "Enabled",
         ]) { (provided, _) in provided }
+        // WebRTC 8037b exposes no per-factory field-trial initializer yet.
+        // Preserve one-time initialization until the pinned binary provides its replacement.
         RTCInitFieldTrialDictionary(fieldTrialsWithDefaults)
         Logger.info("Initialized field trials with \(fieldTrialsWithDefaults)")
     }
